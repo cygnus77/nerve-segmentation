@@ -3,8 +3,13 @@ from glob import glob
 import csv
 import numpy as np
 import cv2
+import torch
 import matplotlib.pyplot as plt
+import threading
+import concurrent.futures as futures
+import itertools
 import argparse
+from multiprocessing import Process, Queue
 
 parser = argparse.ArgumentParser(description='Dataset analysis tool')
 parser.add_argument('-diffs', action='store_true', help='calculate image differences')
@@ -20,15 +25,36 @@ if args.diffs:
 
     print('num files: %d' % len(filelist))
 
-    images = [(p[p.rfind('/')+1:-4] ,cv2.imread(p)) for p in filelist]
+    image_names = [p[p.rfind('/')+1:-4] for p in filelist]
+    # load image data into a 3d numpy array
+    image_data = np.array([cv2.imread(p)[:,:,0] for p in filelist])
 
+    batch_size = 200
+    print('writing csv')
     with open('./imageset.csv', 'w') as csv:
         csv.write('img1,img2,diff\n')
-        for i in range(len(images)):
-            print(i)
-            for j in range(i+1,len(images)):
-                diff = np.sum(np.abs(images[i][1]-images[j][1]))
-                csv.write('%s,%s,%d\n' % (images[i][0], images[j][0], diff))
+        for j in range(len(filelist)):
+            print(j)
+            # load image into cuda as tensor
+            img = torch.from_numpy(image_data[j,:,:]).float().cuda()
+            img = torch.unsqueeze(img,0)
+
+            # process batches
+            for i in range(j+1,len(filelist),batch_size):
+                try:
+                    # load batch of images into cuda
+                    batch = torch.from_numpy(image_data[i:i+batch_size,:,:]).float().cuda()
+                    
+                    # calculate differences
+                    diff = torch.sum(torch.abs(batch - img), [1,2])
+
+                    # write out results
+                    for k in range(diff.shape[0]):
+                        csv.write('%s,%s,%d\n' % (image_names[j], image_names[i+k], diff[k]))
+                except:
+                    print(i,j)
+                    raise
+
         csv.close()
 
 if args.hist:
