@@ -5,9 +5,9 @@ The dataset in this challenge is a great resource for learning and testing seman
 
 ## Sample Results
 
-- **Purple**: True Positive
-- **Yellow**: False Negative
-- **Green**: False Positive
+- **Purple**: True Positive (model prediction matches nerve area marked by human)
+- **Yellow**: False Negative (nodel missed nerve in the area)
+- **Green**: False Positive (model incorrectlt predicted nerve in the area)
 
 ![](out-good1.jpg)
 ![](out-good2.jpg)
@@ -25,10 +25,20 @@ OpenCV decodes each image into a 580x420x3 numpy uint8 array. Though the image i
 
 For smooth down and up sampling, I cropped the images to 576x416 (multiples of 32).
 
-I used some python scripts to analyze the image data:
-- look for duplicate images, with possibly differing masks (labeling errors).
-- distribution of frames with and without nerve segments to help balance dataset prior to training.
+I developed a tool [image-analysis.py](./image-analysis.py) to:
+- Identify duplicate images, with possibly differing masks (labeling errors).
+- View duplicate images and make corrections.
+- Distribution of frames with and without nerve segments to help balance dataset prior to training.
 
+### Duplicates:
+Output of [image-analysis.py](./image-analysis.py)
+| | |
+|--|--|
+| ![](duplicate_images/dup1.png) | ![](duplicate_images/dup2.png) |
+| ![](duplicate_images/dup3.png) | ![](duplicate_images/dup4.png) |
+| | |
+
+[image-analysis.py](./image-analysis.py) works in two modes: scanning and analysis. The '-scan' option scans all data files to spot duplicates by computing image differences for every possible pair of images and stores the results in a file. In the second step, it can show side-by-side comparisons of duplicates, histogram of difference values and allow user to enter corrections.
 
 ## Neural Net Architecture
 VGG-16 is a fairly simple deep network that is commonly used for image segmentation. Though VGG-16 is less accurate than the larger Resnet or Inception networks and slower than Mobilenets, its simple architecture lends itself to extension by adding additional layers, introducing skip-connections, etc.

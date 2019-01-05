@@ -1,4 +1,4 @@
-import os
+import os, sys
 from glob import glob
 import csv
 import numpy as np
@@ -12,15 +12,18 @@ import argparse
 from multiprocessing import Process, Queue
 
 parser = argparse.ArgumentParser(description='Dataset analysis tool')
-parser.add_argument('-diffs', action='store_true', help='calculate image differences')
+parser.add_argument('filename', help='filename of image comparison data')
+parser.add_argument('-scan', action='store_true', help='calculate image differences')
 parser.add_argument('-hist', action='store_true', help='show histogram of difference amounts')
-parser.add_argument('-bucket', action='store', help='set bucket size', default=10000 )
-parser.add_argument('-bucketmax', action='store', help='max bucket', default=1e6)
-parser.add_argument('-view', nargs='?', action='store', const=100, help='show identical images and masks')
+parser.add_argument('-bucket', action='store', type=int, help='set bucket size', default=10000 )
+parser.add_argument('-bucketmax', action='store', type=int, help='max bucket', default=1e6)
+parser.add_argument('-threshold', action='store', type=int, default=100, help='set threshold for detecting duplicates')
+parser.add_argument('-view', nargs='?', action='store', type=int, const=100, help='show identical images and masks. optional arg to show descrepancies over a certain threshold')
+parser.add_argument('-resolve', action='store', default=None, help='write out commands to resolve duplicates')
 
 args = parser.parse_args()
 
-if args.diffs:
+if args.scan:
     filelist = [x for x in glob('./data/train_orig/*.tif') if not '_mask' in x]
 
     print('num files: %d' % len(filelist))
@@ -31,7 +34,7 @@ if args.diffs:
 
     batch_size = 200
     print('writing csv')
-    with open('./imageset.csv', 'w') as csv:
+    with open(args.filename, 'w') as csv:
         csv.write('img1,img2,diff\n')
         for j in range(len(filelist)):
             print(j)
@@ -56,11 +59,12 @@ if args.diffs:
                     raise
 
         csv.close()
+    sys.exit()
 
 if args.hist:
     histo = {}
     count = 0
-    with open('imageset2.csv', 'r') as f:
+    with open(args.filename, 'r') as f:
         rdr = csv.reader(f)
         for row in rdr:
             try:
@@ -88,27 +92,82 @@ if args.hist:
     plt.bar( buckets, values )
     plt.show()
 
-if args.view is not None:
-    with open('imageset2.csv', 'r') as f:
-        rdr = csv.reader(f)
-        for row in rdr:
-            try:
-                diff = int(row[2])
-                if diff < args.view:
-                    img1 = cv2.imread('./data/train_orig/%s.tif' % row[0])
-                    img2 = cv2.imread('./data/train_orig/%s.tif' % row[1])
-                    img1_mask = cv2.imread('./data/train_orig/%s_mask.tif' % row[0])
-                    img2_mask = cv2.imread('./data/train_orig/%s_mask.tif' % row[1])
+dup_count = 0
+mask_mismatch_count = 0
+groups = []
+with open(args.filename, 'r') as f:
+    rdr = csv.reader(f)
+    for row in rdr:
+        try:
+            diff = int(row[2])
+        except:
+            continue
+        if diff < args.threshold:
+            dup_count += 1
+            img1_mask = cv2.imread('./data/train_orig/%s_mask.tif' % row[0])
+            img2_mask = cv2.imread('./data/train_orig/%s_mask.tif' % row[1])
 
-                    plt.figure()
-                    plt.subplot(2,2,1)
-                    plt.imshow(img1, cmap='gray')
-                    plt.subplot(2,2,2)
-                    plt.imshow(img2, cmap='gray')
-                    plt.subplot(2,2,3)
-                    plt.imshow(img1_mask, cmap='gray')
-                    plt.subplot(2,2,4)
-                    plt.imshow(img2_mask, cmap='gray')
-                    plt.show()
-            except:
-                pass
+            mask_diff = np.sum(np.abs(img1_mask - img2_mask))
+            if mask_diff > args.threshold:
+                mask_mismatch_count += 1
+
+            grp = None
+            for g in groups:
+                if (row[0] in g['imgs']) or (row[1] in g['imgs']):
+                    grp = g
+                    break
+            if grp is None:
+                grp = {}
+                grp['imgs'] = set()
+                grp['edges'] = []
+                groups.append(grp)
+            grp['imgs'].add(row[0])
+            grp['imgs'].add(row[1])
+            grp['edges'].append({
+                'a':row[0],
+                'b':row[1],
+                'diff': diff,
+                'mask_diff': mask_diff
+            })
+
+print("Dup count={}, Mask mismatch={}".format(dup_count, mask_mismatch_count))
+for g in groups:
+    print([x for x in g['imgs']])
+
+    if args.view is not None or args.resolve is not None:
+        edges = [x for x in g['edges'] if x['diff'] > args.view]
+        if len(edges) > 0:
+            fig = plt.figure()
+            #fig.suptitle(' '.join( ["{} - {} = {} ; ".format(e['a'], e['b'], e['diff']) for e in edges] ))
+
+            imgs = set()
+            for e in edges:
+                imgs.add(e['a'])
+                imgs.add(e['b'])
+
+            imgs = list(imgs)
+            for idx, img_name in enumerate(imgs):
+                plt.subplot(2,len(imgs),idx+1).set_title("{}. {}".format(idx+1, img_name))
+                img = cv2.imread('./data/train_orig/%s.tif' % img_name)
+                plt.imshow(img, cmap='gray')
+                plt.axis('off')
+
+                plt.subplot(2,len(imgs),len(imgs)+idx+1)
+                img = cv2.imread('./data/train_orig/%s_mask.tif' % img_name)
+                plt.imshow(img, cmap='gray')
+                plt.axis('off')
+            
+            if args.resolve is None:
+                plt.show()
+            else:
+                plt.show(block=False)
+                inp = input('Enter image numbers that are bad: ')
+                if len(inp) > 0:
+                    imgnos = map(int, inp.split(','))
+                    mno = input('Enter mask to use: ')
+                    if len(mno) > 0:
+                        mno = int(mno)
+                        with open(args.resolve, 'a') as f:
+                            for imgno in imgnos:
+                                f.write("copy './data/train_orig/{}_mask.tif' './data/train_orig/{}_mask.tif'\n".format(imgs[mno-1], imgs[imgno-1]))
+                            f.close()
