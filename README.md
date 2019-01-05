@@ -32,6 +32,7 @@ I developed a tool [image-analysis.py](./image-analysis.py) to:
 
 ### Duplicates:
 Output of [image-analysis.py](./image-analysis.py)
+
 | | |
 |--|--|
 | ![](duplicate_images/dup1.png) | ![](duplicate_images/dup2.png) |
@@ -39,6 +40,13 @@ Output of [image-analysis.py](./image-analysis.py)
 | | |
 
 [image-analysis.py](./image-analysis.py) works in two modes: scanning and analysis. The '-scan' option scans all data files to spot duplicates by computing image differences for every possible pair of images and stores the results in a file. In the second step, it can show side-by-side comparisons of duplicates, histogram of difference values and allow user to enter corrections.
+
+### Histogram of image differences
+
+(log scale)
+
+![](./image-similarity.png)
+
 
 ## Neural Net Architecture
 VGG-16 is a fairly simple deep network that is commonly used for image segmentation. Though VGG-16 is less accurate than the larger Resnet or Inception networks and slower than Mobilenets, its simple architecture lends itself to extension by adding additional layers, introducing skip-connections, etc.

@@ -169,5 +169,5 @@ for g in groups:
                         mno = int(mno)
                         with open(args.resolve, 'a') as f:
                             for imgno in imgnos:
-                                f.write("copy './data/train_orig/{}_mask.tif' './data/train_orig/{}_mask.tif'\n".format(imgs[mno-1], imgs[imgno-1]))
+                                f.write("cp -f './data/train_orig/{}_mask.tif' './data/train_orig/{}_mask.tif'\n".format(imgs[mno-1], imgs[imgno-1]))
                             f.close()
