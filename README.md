@@ -33,11 +33,12 @@ I developed a tool [image-analysis.py](./image-analysis.py) to:
 ### Duplicates:
 Output of [image-analysis.py](./image-analysis.py)
 
-| | |
-|--|--|
-| ![](duplicate_images/dup1.png) | ![](duplicate_images/dup2.png) |
-| ![](duplicate_images/dup3.png) | ![](duplicate_images/dup4.png) |
-| | |
+
+![](duplicate_images/dup1.png)
+![](duplicate_images/dup2.png)
+![](duplicate_images/dup3.png)
+![](duplicate_images/dup4.png)
+
 
 [image-analysis.py](./image-analysis.py) works in two modes: scanning and analysis. The '-scan' option scans all data files to spot duplicates by computing image differences for every possible pair of images and stores the results in a file. In the second step, it can show side-by-side comparisons of duplicates, histogram of difference values and allow user to enter corrections.
 
