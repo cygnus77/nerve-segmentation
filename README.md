@@ -42,6 +42,10 @@ Output of [image-analysis.py](./image-analysis.py)
 
 [image-analysis.py](./image-analysis.py) works in two modes: scanning and analysis. The '-scan' option scans all data files to spot duplicates by computing image differences for every possible pair of images and stores the results in a file. In the second step, it can show side-by-side comparisons of duplicates, histogram of difference values and allow user to enter corrections.
 
+- 63 duplicates images with difference < 100, 52 of which have mismatching masks
+- 131 duplicates images with difference < 1000, 107 of which have mismatching masks
+
+
 ### Histogram of image differences
 
 (log scale)
