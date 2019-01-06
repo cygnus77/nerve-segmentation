@@ -6,15 +6,15 @@ The dataset in this challenge is a great resource for learning and testing seman
 ## Sample Results
 
 - **Purple**: True Positive (model prediction matches nerve area marked by human)
-- **Yellow**: False Negative (nodel missed nerve in the area)
-- **Green**: False Positive (model incorrectlt predicted nerve in the area)
+- **Yellow**: False Negative (model missed nerve in the area)
+- **Green**: False Positive (model incorrectly predicted nerve in the area)
 
 ![](out-good1.jpg)
 ![](out-good2.jpg)
 ![](out-miss1.jpg)
 
 ## The Data
-Ultrasound images are provided as 8bit/pixel grascale, LZW compressed TIFF images of dimension 580x420. For each ultrasound image, a mask image of the same type and dimensions as the ultrasound is provided. Each mask image contains one or more manually marked areas representing location of the nerve segments (if any) in the corresponding ultrasound image.
+Ultrasound images are provided as 8bit/pixel grayscale, LZW compressed TIFF images of dimension 580 x 420. For each ultrasound image, a mask image of the same type and dimensions as the ultrasound is provided. Each mask image contains one or more manually marked areas representing location of the nerve segments (if any) in the corresponding ultrasound image.
 
 | Ultrasound image| Label mask |
 |---|---|
@@ -54,7 +54,7 @@ VGG-16 is a fairly simple deep network that is commonly used for image segmentat
 
 ### Model
 
-
+![](./model.png)
 
 
 ### Loss Functions and Metrics
@@ -64,14 +64,16 @@ During training the following metrics are computed after every 30 batches of tra
 ```python
 def iou(y_true, y_pred):
     intersection = torch.sum(y_true * y_pred)
-    return (intersection + 1.) / (torch.sum(y_true) + torch.sum(y_pred) - intersection + 1.)
+    return (intersection + 1.) / 
+                (torch.sum(y_true) + torch.sum(y_pred) - intersection + 1.)
 ```
 
 - [Dice Coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient)
 ```python
 def dice_coef(y_true, y_pred):
     intersection = torch.sum(y_true * y_pred)
-    return (2. * intersection + 1.) / (torch.sum(y_true) + torch.sum(y_pred) + 1.)
+    return (2. * intersection + 1.) / 
+                (torch.sum(y_true) + torch.sum(y_pred) + 1.)
 ```
 
 - [False Positive and False Negative]
@@ -105,15 +107,14 @@ def fscore(y_true, y_pred):
 ```
 
 - Loss function: 
-  - F1-score function weighted to improve recall
-  - Return negative since larger fscore is better and optimizer will push it higher
-  - 
+  - Adapt F1-score function, weighted to improve recall as the loss function.
+  - Returns negative f1 score, since larger fscore is preferable and optimizer will push it towards a larger negative value.
 ```python
 def weighted_fscore_loss(weight):
     def fscore_loss(y_true, y_pred):
         presci = precision(y_true, y_pred)
         rec = recall(y_true, y_pred)
-        return -(1+weight)*(presci * rec)/(weight*presci + rec)
+        return -(1+weight)*(presci * rec) / (weight*presci + rec)
     return fscore_loss
 ```
 
