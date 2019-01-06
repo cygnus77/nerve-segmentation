@@ -56,12 +56,89 @@ Output of [image-analysis.py](./image-analysis.py)
 ## Neural Net Architecture
 VGG-16 is a fairly simple deep network that is commonly used for image segmentation. Though VGG-16 is less accurate than the larger Resnet or Inception networks and slower than Mobilenets, its simple architecture lends itself to extension by adding additional layers, introducing skip-connections, etc.
 
+### Model
 
-Model
+### Loss Functions and Metrics
+- IOU (Intersection over union) / [Jaccard index](https://en.wikipedia.org/wiki/Jaccard_index)
+```python
+def iou(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return (intersection + 1.) / (torch.sum(y_true) + torch.sum(y_pred) - intersection + 1.)
+```
 
-Loss Functions and Metrics
+- [Dice Coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient)
+```python
+def dice_coef(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return (2. * intersection + 1.) / (torch.sum(y_true) + torch.sum(y_pred) + 1.)
+```
 
-Training
+- [False Positive and False Negative]
+```python
+def falsepos(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return torch.sum(y_pred) - intersection
 
-Evaluation
+def falseneg(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return torch.sum(y_true) - intersection
+```
 
+- [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall)
+```python
+def precision(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return intersection / (torch.sum(y_pred) + 1.)
+
+def recall(y_true, y_pred):
+    intersection = torch.sum(y_true * y_pred)
+    return intersection / (torch.sum(y_true) + 1.)
+```
+
+- [F1-score](https://en.wikipedia.org/wiki/F1_score)
+```python
+def fscore(y_true, y_pred):
+    presci = precision(y_true, y_pred)
+    rec = recall(y_true, y_pred)
+    return 2*(presci * rec)/(presci + rec)
+```
+
+- Loss function: 
+  - F1-score function weighted to improve recall
+  - Return negative since larger fscore is better and optimizer will push it higher
+  - 
+```python
+def weighted_fscore_loss(weight):
+    def fscore_loss(y_true, y_pred):
+        presci = precision(y_true, y_pred)
+        rec = recall(y_true, y_pred)
+        return -(1+weight)*(presci * rec)/(weight*presci + rec)
+    return fscore_loss
+```
+
+### Training
+
+
+## Evaluation
+Metrics from training are sent to [Visdom](https://github.com/facebookresearch/visdom) server for visualization.
+
+Mean Training and Validation Losses
+![](losses.png)
+- <span style="color:orange">Validation loss</span> 
+- <span style="color:blue">Training loss</span> 
+
+IOU and Dice Coefficient improves with training
+![](iou,dice.png)
+- <span style="color:orange">IOU</span>
+- <span style="color:blue">Dice coefficient</span>
+
+False Positives and False Negatives drop
+![](fpfn.png)
+- <span style="color:orange">False negatives</span>
+- <span style="color:blue">False positives</span>
+
+Precision, Recall and F1-Score improve with training
+![](fscore.png)
+- <span style="color:orange">Recall</span>
+- <span style="color:blue">Precision</span>
+- <span style="color:green">F1-score</span>
