@@ -33,18 +33,15 @@ I developed a tool [image-analysis.py](./image-analysis.py) to:
 ### Duplicates:
 Output of [image-analysis.py](./image-analysis.py)
 
-
 ![](duplicate_images/dup1.png)
 ![](duplicate_images/dup2.png)
 ![](duplicate_images/dup3.png)
 ![](duplicate_images/dup4.png)
 
-
 [image-analysis.py](./image-analysis.py) works in two modes: scanning and analysis. The '-scan' option scans all data files to spot duplicates by computing image differences for every possible pair of images and stores the results in a file. In the second step, it can show side-by-side comparisons of duplicates, histogram of difference values and allow user to enter corrections.
 
 - 63 duplicates images with difference < 100, 52 of which have mismatching masks
 - 131 duplicates images with difference < 1000, 107 of which have mismatching masks
-
 
 ### Histogram of image differences
 
@@ -52,13 +49,17 @@ Output of [image-analysis.py](./image-analysis.py)
 
 ![](./image-similarity.png)
 
-
 ## Neural Net Architecture
 VGG-16 is a fairly simple deep network that is commonly used for image segmentation. Though VGG-16 is less accurate than the larger Resnet or Inception networks and slower than Mobilenets, its simple architecture lends itself to extension by adding additional layers, introducing skip-connections, etc.
 
 ### Model
 
+
+
+
 ### Loss Functions and Metrics
+During training the following metrics are computed after every 30 batches of training.
+
 - IOU (Intersection over union) / [Jaccard index](https://en.wikipedia.org/wiki/Jaccard_index)
 ```python
 def iou(y_true, y_pred):
@@ -118,6 +119,41 @@ def weighted_fscore_loss(weight):
 
 ### Training
 
+**dataset.py:**
+Data set is randomly split into training and validation sets - 80% training and 20% validation.
+
+Batches of data are transformed with [``` torchvision.transforms ```](https://pytorch.org/docs/stable/torchvision/transforms.html):
+- Converting into tensors
+- Normalized to values between -1 and 1 with mean 0.5 and std. dev 0.5.
+
+**train.py:**
+Batches of training data are loaded intp the GPU for computing the forward pass and getting the output of the network, calculating losses by comparing with labeled data and updating gradients in the backward pass through the loss function.
+
+``` python
+for i, (inputs, labels) in enumerate(train_loader, 0):
+
+    # map to gpu
+    inputs, labels = inputs.cuda(), labels.cuda()
+
+    # zero the parameter gradients
+    optimizer.zero_grad()
+
+    # forward + backward + optimize
+    outputs = net(inputs)
+    loss = criterion(outputs, labels)
+    loss.backward()
+    optimizer.step()
+```
+
+Since I chose not to resize the images, I could only fit 10 images per batch in the GPU.
+Resizing to smaller dimensions would have allowed larger batch sizes at the expense of precision.
+
+At about 10 epochs of training, validation and training losses plateaued.
+
+**Optimizer and learning rate:**
+
+Torch offeres several [optimization](https://pytorch.org/docs/stable/optim.html) strategies, I used the popular Adam optimizer as it tends to converge quickly.
+Through trial and error, I arrived at a learning rate of 1e-5. Further, I used pytorch's learning rate scheduler [ReduceLROnPlateau](https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.ReduceLROnPlateau) to automatically scale the learning rate when validation starts stagnating. But in testing 10 epochs, the learning rate was not reduced.
 
 ## Evaluation
 Metrics from training are sent to [Visdom](https://github.com/facebookresearch/visdom) server for visualization.
