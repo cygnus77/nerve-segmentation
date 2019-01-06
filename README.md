@@ -160,21 +160,21 @@ Metrics from training are sent to [Visdom](https://github.com/facebookresearch/v
 
 Mean Training and Validation Losses
 ![](losses.png)
-- <span style="color:orange">Validation loss</span> 
-- <span style="color:blue">Training loss</span> 
+- <span style="color:orange">Orange: Validation loss</span> 
+- <span style="color:blue">Blue: Training loss</span> 
 
 IOU and Dice Coefficient improves with training
 ![](iou,dice.png)
-- <span style="color:orange">IOU</span>
-- <span style="color:blue">Dice coefficient</span>
+- <span style="color:orange">Orange: IOU</span>
+- <span style="color:blue">Blue: Dice coefficient</span>
 
 False Positives and False Negatives drop
 ![](fpfn.png)
-- <span style="color:orange">False negatives</span>
-- <span style="color:blue">False positives</span>
+- <span style="color:orange">Orange: False negatives</span>
+- <span style="color:blue">Blue: False positives</span>
 
 Precision, Recall and F1-Score improve with training
 ![](fscore.png)
-- <span style="color:orange">Recall</span>
-- <span style="color:blue">Precision</span>
-- <span style="color:green">F1-score</span>
+- <span style="color:orange">Orange: Recall</span>
+- <span style="color:blue">Blue: Precision</span>
+- <span style="color:green">Green: F1-score</span>
