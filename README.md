@@ -158,23 +158,31 @@ Through trial and error, I arrived at a learning rate of 1e-5. Further, I used p
 ## Evaluation
 Metrics from training are sent to [Visdom](https://github.com/facebookresearch/visdom) server for visualization.
 
-Mean Training and Validation Losses
+### Mean Training and Validation Losses
 ![](losses.png)
 - <span style="color:orange">Orange: Validation loss</span> 
 - <span style="color:blue">Blue: Training loss</span> 
 
-IOU and Dice Coefficient improves with training
+---
+
+### IOU and Dice Coefficient improves with training
 ![](iou,dice.png)
 - <span style="color:orange">Orange: IOU</span>
 - <span style="color:blue">Blue: Dice coefficient</span>
 
-False Positives and False Negatives drop
+---
+
+### False Positives and False Negatives drop
 ![](fpfn.png)
 - <span style="color:orange">Orange: False negatives</span>
 - <span style="color:blue">Blue: False positives</span>
 
-Precision, Recall and F1-Score improve with training
+---
+
+### Precision, Recall and F1-Score improve with training
 ![](fscore.png)
 - <span style="color:orange">Orange: Recall</span>
 - <span style="color:blue">Blue: Precision</span>
 - <span style="color:green">Green: F1-score</span>
+
+---
