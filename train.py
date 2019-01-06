@@ -44,7 +44,7 @@ def fit(net, train_loader, val_loader, criterion, optimizer, lrscheduler, measur
         train_loss += loss.item()
         
         losses.append(loss.item())
-        if i % 30 == 0 and i > 0:
+        if i % 30 == 0:
             loss_vis.plot_loss(np.mean(losses), (epoch_size * epoch) + i, 'train_loss')
             losses.clear()
             
