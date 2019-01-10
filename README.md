@@ -13,6 +13,9 @@ The dataset in this challenge is a great resource for learning and testing seman
 ![](out-good2.jpg)
 ![](out-miss1.jpg)
 
+After 15 epochs of training, the model achieves an F-score of 0.75.
+
+
 ## The Data
 Ultrasound images are provided as 8bit/pixel grayscale, LZW compressed TIFF images of dimension 580 x 420. For each ultrasound image, a mask image of the same type and dimensions as the ultrasound is provided. Each mask image contains one or more manually marked areas representing location of the nerve segments (if any) in the corresponding ultrasound image.
 
