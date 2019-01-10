@@ -1,0 +1,6 @@
+01-10 09:44
+optimizer: Adam
+scheduler: ReduceLROnPlateau
+learning_rate: 0.000010
+fscore_weights: 1
+
